@@ -271,7 +271,7 @@ def UCT(rootstate, itermax, verbose=False, clf=None):
     return sorted(rootnode.childNodes, key=lambda c: c.visits)[-1].move
 
 
-def UCTPlayGame(clf1, clf2, itermax=100, verbose=False):
+def UCTPlayGame(clf1, clf2, itermax1=100, itermax2=100, verbose=False):
     """ Play a sample game between two UCT players where each player gets a different number
         of UCT iterations (= simulations = tree nodes).
     """
@@ -283,9 +283,9 @@ def UCTPlayGame(clf1, clf2, itermax=100, verbose=False):
             print(str(state))
         if state.playerJustMoved == 1:
             # play with values for itermax and verbose = True
-            m = UCT(rootstate=state, itermax=itermax, verbose=False, clf=clf1)
+            m = UCT(rootstate=state, itermax=itermax1, verbose=False, clf=clf1)
         else:
-            m = UCT(rootstate=state, itermax=itermax, verbose=False, clf=clf2)
+            m = UCT(rootstate=state, itermax=itermax2, verbose=False, clf=clf2)
         if verbose:
             print("Best Move: " + str(m) + "\n")
         # All the state is saved in an array to store in a csv
@@ -303,6 +303,9 @@ def UCTPlayGame(clf1, clf2, itermax=100, verbose=False):
         winner = 3 - state.playerJustMoved
     else:
         print("Nobody wins!")
+
+    ###
+    ###
     return winner, samples
 
 
@@ -345,7 +348,8 @@ def train(epocs, games_per_epoc):
             print('game')
             print(game)
             # Function tambien debe de regresar quien gano
-            _, samples = UCTPlayGame(clf1, clf2, 100, False)
+            _, samples = UCTPlayGame(
+                clf1, clf2, 1000, 100, False)
             save_samples_to_csv(f"datasets/samples_{epoc}.csv", samples)
 
         clf1 = train_clf(epoc)
@@ -354,11 +358,11 @@ def train(epocs, games_per_epoc):
             os.remove(f"datasets/samples_{epoc}.csv")
 
 
-def compareClfs(clf1, clf2, itermax):
+def compareClfs(clf1, clf2, itermax1, itermax2):
     results = {}
 
     for _ in range(50):
-        winner, _ = UCTPlayGame(clf1, clf2, itermax, False)
+        winner, _ = UCTPlayGame(clf1, clf2, itermax1, itermax2, False)
         if winner not in results:
             results[winner] = 1
         else:
@@ -372,12 +376,12 @@ if __name__ == "__main__":
     """ Play a single game to the end using UCT for both players.
     """
 
-    EPOCS = 20
-    GAMES_PER_EPOC = 5
+    EPOCS = 7
+    GAMES_PER_EPOC = 15
     train(EPOCS, GAMES_PER_EPOC)
 
-    clf2 = joblib.load(f'classifiers/clf_v10.pkl')
-    clf1 = joblib.load('classifiers/clf_v0.pkl')
-    print(clf1.n_features_)
-    print(clf2.n_features_)
-    compareClfs(clf1, clf2, 500)
+    clf1 = joblib.load(f'classifiers/clf_v0.pkl')
+    clf2 = joblib.load(f'classifiers/clf_v{EPOCS-1}.pkl')
+    # clf2 = joblib.load(f'classifiers/clf_v1.pkl')
+    # clf2 = None
+    compareClfs(clf1, clf2, 200, 200)
