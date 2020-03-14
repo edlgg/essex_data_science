@@ -349,13 +349,13 @@ def train(epocs, games_per_epoc):
             print(game)
             # Function tambien debe de regresar quien gano
             _, samples = UCTPlayGame(
-                clf1, clf2, 1000, 100, False)
+                clf1, clf2, 100, 100, False)
             save_samples_to_csv(f"datasets/samples_{epoc}.csv", samples)
 
         clf1 = train_clf(epoc)
         clf2 = clf1
-        if epoc < 25:
-            os.remove(f"datasets/samples_{epoc}.csv")
+        # if epoc < 25:
+        #     os.remove(f"datasets/samples_{epoc}.csv")
 
 
 def compareClfs(clf1, clf2, itermax1, itermax2):
@@ -376,8 +376,8 @@ if __name__ == "__main__":
     """ Play a single game to the end using UCT for both players.
     """
 
-    EPOCS = 7
-    GAMES_PER_EPOC = 15
+    EPOCS = 5
+    GAMES_PER_EPOC = 5
     train(EPOCS, GAMES_PER_EPOC)
 
     clf1 = joblib.load(f'classifiers/clf_v0.pkl')
