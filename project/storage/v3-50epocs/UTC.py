@@ -24,7 +24,6 @@ import numpy as np
 import pandas as pd
 from sklearn.externals import joblib
 from sklearn.tree import DecisionTreeClassifier
-import sys
 
 
 class OthelloState:
@@ -297,10 +296,10 @@ def UCTPlayGame(clf1, clf2, itermax1=100, itermax2=100, verbose=False):
         samples.append(sample)
         state.DoMove(m)
     if state.GetResult(state.playerJustMoved) == 1.0:
-        print("HAL 9000 wins!")
+        print("Player " + str(state.playerJustMoved) + " wins!")
         winner = state.playerJustMoved
     elif state.GetResult(state.playerJustMoved) == 0.0:
-        print("Ultron wins!")
+        print("Player " + str(3 - state.playerJustMoved) + " wins!")
         winner = 3 - state.playerJustMoved
     else:
         print("Nobody wins!")
@@ -350,19 +349,19 @@ def train(epocs, games_per_epoc):
             print(game)
             # Function tambien debe de regresar quien gano
             _, samples = UCTPlayGame(
-                clf1, clf2, 100, 100, False)
+                clf1, clf2, 300, 200, False)
             save_samples_to_csv(f"datasets/samples_{epoc}.csv", samples)
 
         clf1 = train_clf(epoc)
         clf2 = clf1
-        # if epoc < 25:
-        #     os.remove(f"datasets/samples_{epoc}.csv")
+        if epoc < 25:
+            os.remove(f"datasets/samples_{epoc}.csv")
 
 
-def compareClfs(clf1, clf2, itermax1, itermax2, rounds=50):
+def compareClfs(clf1, clf2, itermax1, itermax2):
     results = {}
 
-    for _ in range(rounds):
+    for _ in range(50):
         winner, _ = UCTPlayGame(clf1, clf2, itermax1, itermax2, False)
         if winner not in results:
             results[winner] = 1
@@ -377,18 +376,12 @@ if __name__ == "__main__":
     """ Play a single game to the end using UCT for both players.
     """
 
-    EPOCS = 5
-    GAMES_PER_EPOC = 5
-    # train(EPOCS, GAMES_PER_EPOC)
+    EPOCS = 50
+    GAMES_PER_EPOC = 10
+    train(EPOCS, GAMES_PER_EPOC)
 
-    clf1 = clf2 = None
-    if len(sys.argv) > 2:
-        print(sys.argv[1])
-        clf1 = joblib.load(sys.argv[1])
-        clf2 = None
-        if sys.argv[2] != "None":
-            clf2 = joblib.load(sys.argv[2])
-
-    print(clf1)
-    print(clf2)
-    compareClfs(clf1, clf2, 200, 200, 100)
+    clf1 = joblib.load(f'classifiers/clf_v0.pkl')
+    clf2 = joblib.load(f'classifiers/clf_v{EPOCS-1}.pkl')
+    # clf2 = joblib.load(f'classifiers/clf_v1.pkl')
+    # clf2 = None
+    compareClfs(clf1, clf2, 200, 200)
